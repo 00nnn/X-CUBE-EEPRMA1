@@ -186,55 +186,31 @@ void MX_EEPROM_RW_Init(void)
   EEPRMA2_GPIO_Init();
   /* Init UART for display message on console */
   BSP_COM_Init(COM1);
+
   while (EEPRMA2_M24_Init(EEPRMA2_M24C02_0) != BSP_ERROR_NONE);
   while (EEPRMA2_M24_Init(EEPRMA2_M24256_0) != BSP_ERROR_NONE);
   while (EEPRMA2_M24_Init(EEPRMA2_M24M01_0) != BSP_ERROR_NONE);
   while (EEPRMA2_M95_Init(EEPRMA2_M95M04_0) != BSP_ERROR_NONE);
   while (EEPRMA2_M95_Init(EEPRMA2_M95256_0) != BSP_ERROR_NONE);
-  while (EEPRMA2_M95_Init(EEPRMA2_M95040_0) != BSP_ERROR_NONE);
 
   /* Write Enable, Write Disable and Read Status only for SPI EEPROM  */
-  printf(" \r\n ");
-  printf("--SPI EEPROM READ STATUS-- \r\n");
-  WriteDisableReadStatus(EEPRMA2_M95256_0);
-  HAL_Delay(5);
-  WriteEnableReadStatus(EEPRMA2_M95256_0);
-  HAL_Delay(5);
-  WriteDisableReadStatus(EEPRMA2_M95040_0);
-  HAL_Delay(5);
-  WriteEnableReadStatus(EEPRMA2_M95040_0);
-  HAL_Delay(5);
+  printf("\r\n");
   WriteDisableReadStatus(EEPRMA2_M95M04_0);
   HAL_Delay(5);
   WriteEnableReadStatus(EEPRMA2_M95M04_0);
 
   /* Writing Single Byte in I2C EEPROM */
   printf(" \r\n ");
-  printf("-- I2C/SPI EEPROM SINGLE BYTE-- \r\n");
-  M24_TestSingleByte(0x00, EEPRMA2_M24C02_0, BSP_ERROR_NONE, BSP_ERROR_NONE);
-  M24_TestSingleByte(0xC8, EEPRMA2_M24256_0, BSP_ERROR_NONE, BSP_ERROR_NONE);
-  M24_TestSingleByte(0x05, EEPRMA2_M24M01_0, BSP_ERROR_NONE, BSP_ERROR_NONE);
-  M95_TestSingleByte(0x01, EEPRMA2_M95040_0, BSP_ERROR_NONE, BSP_ERROR_NONE);
+  printf("SPI EEPROM SINGLE BYTE-- \r\n");
   M95_TestSingleByte(0x01, EEPRMA2_M95M04_0, BSP_ERROR_NONE, BSP_ERROR_NONE);
-  /*EEPROM I2C : Multiple Bytes read/write*/
-  printf(" \r\n ");
-  printf("-- I2C/SPI EEPROM DATA -- \r\n");
-  /* Write Data into I2C EEPROM memory from begin to end and then read */
-  M24_TestData(0x00, EEPRMA2_M24C02_0, tx256, rx256, SIZE256, BSP_ERROR_NONE, BSP_ERROR_NONE);
-  M95_TestData(0x00, EEPRMA2_M95040_0, tx256, rx256, SIZE256, BSP_ERROR_NONE, BSP_ERROR_NONE);
-
-  /*EEPROM I2C : Page read/write*/
-  printf(" \r\n ");
-  printf("--I2C EEPROM PAGE-- \r\n");
-  M24_TestPage(0x00, EEPRMA2_M24C02_0, tx16, rx16, SIZE16, BSP_ERROR_NONE, BSP_ERROR_NONE);
 
   /*EEPROM SPI : Page read/write*/
-  printf(" \r\n ");
+  printf("\r\n");
   printf("--SPI EEPROM PAGE-- \r\n");
   M95_TestPage(0x00, EEPRMA2_M95M04_0, tx512, rx512, SIZE512, BSP_ERROR_NONE, BSP_ERROR_NONE);
 
   /* Read Page ID */
-  printf(" \n\n\r ");
+  printf("\n\n\r");
   printf("--SPI M95M04 EEPROM READ ID PAGE-- \r\n");
   M95_ReadID(EEPRMA2_M95M04_0, 0x00);
   M95_WriteID(EEPRMA2_M95M04_0, 0x00);
@@ -243,15 +219,56 @@ void MX_EEPROM_RW_Init(void)
 
   /*
   Uncomment this function to permanently Lock ID Page on EEPRMA2_M95M04_0
-
   M95_LockID(EEPRMA2_M95M04_0);
-
   */
 
 }
 
 void MX_EEPROM_RW_Process(void)
 {
+    #define RX_SIZE 1024
+    uint8_t rxadded[RX_SIZE];
+    uint8_t tx512added[] = "abcdefghE-EEPROM- Expansion Firmware library EEPROM driver example : This firmware provides "
+                      "a basic example of how to use the X-Nucleo-eXpansion firmware library. "
+                      "This block of data is specially written to test the data write function of EEPROM (SPI/I2C)   "
+                      "abcdefghE-EEPROM-Expansion Firmware library EEPROM driver example : This firmware provides "
+                      "a basic example of how to use the X-Nucleo-eXpansion firmware library. "
+                      "This block of data is specially written to test the data write function of EEPROM SPI/I2C IC"
+                      "\rThis is an added piece to ensure we can read or write outside of the page";
+
+    uint8_t tx512dank[] = "abcdefghE-EEPROM- Expansion Firmware library EEPROM driver example : This firmware provides "
+                          "a basic example of how to use the X-Nucleo-eXpansion firmware library. "
+                          "This block of data is specially written to test the data write function of EEPROM (SPI/I2C)   "
+                          "abcdefghE-EEPROM-Expansion Firmware library EEPROM driver example : This firmware provides "
+                          "a basic example of how to use the X-Nucleo-eXpansion firmware library. "
+                          "This block of data is specially written to test the data write function of EEPROM SPI/I2C IC"
+                          "\rDank";
+
+    uint32_t logging_interval_ms = 20000;
+    static uint32_t next_tick = 0;
+        uint32_t this_tick = HAL_GetTick();
+
+        if (this_tick >= next_tick)
+        {
+            uint8_t writestatus1 = EEPRMA2_M95_WriteData(EEPRMA2_M95M04_0, tx512added, 0x00, COUNTOF(tx512added)-1);
+            uint8_t writestatus2 = EEPRMA2_M95_WriteData(EEPRMA2_M95M04_0, tx512dank, 0x00, COUNTOF(tx512dank)-1);
+            uint8_t readstatus = EEPRMA2_M95_ReadData(EEPRMA2_M95M04_0, rxadded, 0x00, RX_SIZE);
+
+
+            if (readstatus == BSP_ERROR_NONE && writestatus1 == BSP_ERROR_NONE && writestatus2 == BSP_ERROR_NONE)
+            {
+              printf("TestRead|target: %s|address: %u|data size: %d|result: passed \r\n", "M95M04", 0x00, RX_SIZE);
+              printf("%s\n", rxadded);
+            }
+            else
+            {
+              printf("TestRead|target: %s|address: %u|data size: %d|result: failed \r\n", "M95M04", 0x00, RX_SIZE);
+            }
+
+            next_tick = this_tick + logging_interval_ms;
+        }
+
+
 }
 
 /**

@@ -43,8 +43,8 @@ EEPROMEX_CtrlPin_TypeDef EEPROMEX_CtrlPin[7] = { { M95M04_EEPROM_SPI_CS_PIN, M95
                                                     { EEPRMA2_M95_HOLD_PIN, EEPRMA2_M95_HOLD_PORT },
                                                     { EEPRMA2_M95_WP_PIN, EEPRMA2_M95_WP_PORT } }; 
 
-uint16_t M95PageSize   = 0;
-uint64_t M95MemorySize = 0; /*in bytes*/
+uint16_t M95PageSize   = 512;
+uint64_t M95MemorySize = 524288; /*in bytes*/
 
 /**
  * @brief  Initializes the SPI EEPROMs
