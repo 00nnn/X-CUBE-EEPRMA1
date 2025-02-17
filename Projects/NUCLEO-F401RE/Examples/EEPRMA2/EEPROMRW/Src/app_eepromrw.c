@@ -31,6 +31,7 @@ extern "C" {
 #include "eeprma2_m24.h"
 #include "eeprma2_m95.h"
 #include "eeprma2_conf.h"
+#include "nv_data.h"
 
 /** @defgroup EEPROM_NUCLEO
   * @{
@@ -149,9 +150,21 @@ void MX_EEPROM_Init(void)
   /* USER CODE END M24_M95_Library_Init_PreTreatment */
 
   /* Initialize the peripherals and the M24 and M95 components */
+  EEPRMA2_GPIO_Init();
+  /* Init UART for display message on console */
+  BSP_COM_Init(COM1);
 
-  MX_EEPROM_RW_Init();
+  while (EEPRMA2_M24_Init(EEPRMA2_M24C02_0) != BSP_ERROR_NONE);
+  while (EEPRMA2_M24_Init(EEPRMA2_M24256_0) != BSP_ERROR_NONE);
+  while (EEPRMA2_M24_Init(EEPRMA2_M24M01_0) != BSP_ERROR_NONE);
+  while (EEPRMA2_M95_Init(EEPRMA2_M95M04_0) != BSP_ERROR_NONE);
+  while (EEPRMA2_M95_Init(EEPRMA2_M95256_0) != BSP_ERROR_NONE);
+  EEPRMA2_GPIO_Init();
 
+  InitializeEEPROM();
+  printf("Initialziation of EEPROM finished\r\r");
+  LoadImageHeaders();
+  printf("Loaded All Image Headers to flash\r\r");
   /* USER CODE BEGIN SV */
 
   /* USER CODE END SV */
@@ -170,8 +183,22 @@ void MX_EEPROM_Init(void)
 void MX_EEPROM_Process(void)
 {
   /* USER CODE BEGIN M24_M95_Library_Process */
-  MX_EEPROM_RW_Process();
-
+  //MX_EEPROM_RW_Process();
+//    uint8_t image_data[MAX_IMAGE_SIZE] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+//    uint8_t read_buffer[MAX_IMAGE_SIZE];
+//    uint16_t width, height;
+//
+//    if (EEPROM_SaveImage(0x0001, 2, 8, image_data)) {
+//        if (EEPROM_ReadImage(1, read_buffer, &width, &height)) {
+//            printf("Read Back Image: ");
+//            for (uint32_t i = 0; i < width * height; i++) {
+//                printf("%u,", read_buffer[i]);
+//                if (read_buffer[i] != image_data[i]) {
+//                    printf("Error: Data mismatch\n");
+//                }
+//            }
+//        }
+//    }
   /* USER CODE END M24_M95_Library_Process */
 }
 
